@@ -60,6 +60,8 @@ def check_avahi
 				stdin,stdout,stderr = Open3.popen3("/usr/bin/service avahi-daemon start")
 				if stdout.read.chomp =~ /running/i
 					print_good("Avahi service successfuly startered")
+					# give it time to properly start
+					sleep 2.0
 				else
 					print_error("Could not start Avahi service")
 					exit
@@ -194,7 +196,7 @@ if records.length > 0
 	if csvfile
 		print_status("Saving found records to #{csvfile}")
 		gen_csv(csvfile, records)
-		print_good("Records saved")
+		print_good("#{records.length} Records saved")
 		exit
 	end
 	print_records(records)
