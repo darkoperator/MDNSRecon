@@ -50,16 +50,36 @@ end
 
 # Function to check is the service is running
 def check_avahi
-	stdin,stdout,stderr = Open3.popen3("/usr/bin/service avahi-daemon status")
-	if stdout.read.chomp =~ /stop/i 
-		print_error("Avahi Service is not running will attempt to start it")
-		check_root
-		stdin,stdout,stderr = Open3.popen3("/usr/bin/service avahi-daemon start")
-		if stdout.read.chomp =~ /running/i
-			print_good("Avahi service successfuly startered")
+	if File.exists?("/etc/debian_version")
+		stdin,stdout,stderr = Open3.popen3("/usr/bin/lsb_release -d")
+		if stdout.read.chomp =~ /ubuntu/i
+			stdin,stdout,stderr = Open3.popen3("/usr/bin/service avahi-daemon status")
+			if stdout.read.chomp =~ /stop/i
+				print_error("Avahi Service is not running will attempt to start it")
+				check_root
+				stdin,stdout,stderr = Open3.popen3("/usr/bin/service avahi-daemon start")
+				if stdout.read.chomp =~ /running/i
+					print_good("Avahi service successfuly startered")
+				else
+					print_error("Could not start Avahi service")
+					exit
+				end
+			end
 		else
-			print_error("Could not start Avahi service")
-			exit
+			stdin,stdout,stderr = Open3.popen3("/etc/init.d/avahi-daemon status")
+			if stdout.read.chomp =~ /not/i
+				print_error("Avahi Service is not running will attempt to start it")
+				check_root
+				Open3.popen3("/usr/bin/service avahi-daemon start")
+				sleep 2.0
+				stdin,stdout,stderr = Open3.popen3("/etc/init.d/avahi-daemon status")
+				if stdout.read.chomp =~ /running/i
+					print_good("Avahi service successfuly startered")
+				else
+					print_error("Could not start Avahi service")
+					exit
+				end
+			end
 		end
 	end
 end
